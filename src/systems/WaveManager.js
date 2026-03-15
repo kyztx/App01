@@ -62,6 +62,7 @@ export class WaveManager {
         boss.hp += (this.game.wave / 5) * 50; 
         
         this.game.enemies.push(boss);
+        this.game.soundManager.startBGM('boss');
     }
 
     advanceWave() {
@@ -82,6 +83,7 @@ export class WaveManager {
     checkBossDefeat() {
         if (this.bossActive && this.game.enemies.filter(e => e.isBoss).length === 0) {
             this.bossActive = false;
+            this.game.soundManager.startBGM('normal'); // Revert back to normal BGM
             // Reward massive points, maybe spawn powerup, then wave instantly advances
             this.advanceWave();
         }

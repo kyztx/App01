@@ -7,7 +7,7 @@ export class SoundManager {
         
         // BGM State
         this.bgmPlaying = false;
-        this.bgmNotes = [220, 261.63, 329.63, 392.00, 329.63, 261.63]; // A minor pentatonic approx
+        this.bgmMode = 'normal';
         this.bgmIndex = 0;
         this.bgmIntervalId = null;
     }
@@ -86,34 +86,43 @@ export class SoundManager {
         this.playTone(200, 'sawtooth', 0.1, 0.5, 0.8);
     }
     
-    startBGM() {
-        if (this.bgmPlaying) return;
+    startBGM(mode = 'normal') {
+        if (this.bgmPlaying && this.bgmMode === mode) return;
+        
+        this.stopBGM(); // Stop existing track to change modes
+        this.bgmMode = mode;
         this.bgmPlaying = true;
+        this.bgmIndex = 0;
+        
         if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
         
-        // Let's create a synthwave-style 16-step sequencer (4/4 time, 16th notes)
-        // Tempo: 120 BPM -> 1 beat = 500ms -> 16th note = 125ms
-        const stepTime = 125; 
+        // Normal Mode: 120 BPM. Boss mode: 136 BPM (faster)
+        const stepTime = mode === 'normal' ? 125 : 110; 
         
-        // Frequencies for a driving Cm progression: C3, Eb3, G3, Bb3, C4
-        const C2 = 65.41;
-        const C3 = 130.81;
-        const Eb3 = 155.56;
-        const G3 = 196.00;
-        const Bb3 = 233.08;
-        const C4 = 261.63;
-        const Eb4 = 311.13;
-        
-        // Bassline pattern (16 steps), driving bass
-        const bassPattern = [
+        // --- Normal Mode Data ---
+        const C2 = 65.41, C3 = 130.81, Eb3 = 155.56, G3 = 196.00, Bb3 = 233.08, C4 = 261.63, Eb4 = 311.13;
+        const normalBassPattern = [
             C2, C2, C3, C2, C2, C2, C3, C2,
             Eb3, Eb3, C3, Eb3, Bb3, Bb3, G3, Bb3
         ];
-        
-        // Arpeggiator pattern (16 steps), 0 means rest
-        const arpPattern = [
+        const normalArpPattern = [
             C4, 0, Eb4, 0, C4, G3, C4, Eb4,
             Bb3, 0, Eb4, 0, Bb3, G3, Bb3, C4
+        ];
+        
+        // --- Boss Mode Data (Intense, Heavy, Driving) ---
+        const D2 = 73.42, F2 = 87.31, C2_boss = 65.41, G2_boss = 98.00;
+        const D3 = 146.83, A3 = 220.00, C4_boss = 261.63, D4 = 293.66, F4 = 349.23, G4 = 392.00;
+        
+        // Driving, continuous 16th chug for boss bassline
+        const bossBassPattern = [
+            D2, D2, D3, D2, D2, D3, D2, D2,
+            F2, F2, C2_boss, C2_boss, G2_boss, G2_boss, F2, C2_boss
+        ];
+        // Intense syncopated arpeggio lead
+        const bossArpPattern = [
+            D4, A3, C4_boss, D4, D4, A3, C4_boss, D4,
+            F4, C4_boss, D4, F4, G4, F4, D4, C4_boss
         ];
         
         this.bgmIntervalId = setInterval(() => {
@@ -121,25 +130,29 @@ export class SoundManager {
             
             const step = this.bgmIndex % 16;
             
-            // 4 on the floor Kick Drum (every 4th step = quarter notes)
-            if (step % 4 === 0) {
-                this.playTone(80, 'square', 0.1, 0.15, 0.1); 
-            }
-            
-            // Snare Drum (Hit on 2 and 4 = steps 4 and 12)
-            if (step === 4 || step === 12) {
-                // Short noise burst effect for snare using high freq square
-                this.playTone(400, 'square', 0.05, 0.1, 0.2);
-            }
-            
-            // Bassline
-            const bassNote = bassPattern[step];
-            this.playTone(bassNote, 'square', 0.1, 0.1); // Short punchy bass
-            
-            // Arpeggio / Melody
-            const arpNote = arpPattern[step];
-            if (arpNote !== 0) {
-                this.playTone(arpNote, 'sawtooth', 0.15, 0.05); 
+            if (this.bgmMode === 'normal') {
+                // 4 on the floor Kick Drum
+                if (step % 4 === 0) this.playTone(80, 'square', 0.1, 0.15, 0.1); 
+                // Snare Drum
+                if (step === 4 || step === 12) this.playTone(400, 'square', 0.05, 0.1, 0.2);
+                
+                // Bassline & Arp
+                if (normalBassPattern[step] !== 0) this.playTone(normalBassPattern[step], 'square', 0.1, 0.1); 
+                if (normalArpPattern[step] !== 0) this.playTone(normalArpPattern[step], 'sawtooth', 0.15, 0.05); 
+            } else {
+                // BOSS MODE
+                // Aggressive Double Kick drum (every 8th note, plus an extra hit for urgency)
+                if (step % 2 === 0 || step === 15) this.playTone(60, 'square', 0.1, 0.25, 0.15); 
+                // Heavy layered Snare
+                if (step === 4 || step === 12) {
+                    this.playTone(300, 'square', 0.08, 0.2, 0.3);
+                    this.playTone(150, 'sawtooth', 0.1, 0.15, 0.1);
+                }
+                
+                // Nasty sawtooth bass chug
+                if (bossBassPattern[step] !== 0) this.playTone(bossBassPattern[step], 'sawtooth', 0.15, 0.15);
+                // Piercing lead Arp
+                if (bossArpPattern[step] !== 0) this.playTone(bossArpPattern[step], 'square', 0.2, 0.08);
             }
             
             this.bgmIndex++;
