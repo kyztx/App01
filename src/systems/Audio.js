@@ -99,6 +99,9 @@ export class SoundManager {
         // Normal Mode: 115 BPM. Boss mode: 136 BPM (faster)
         const stepTime = mode === 'normal' ? 130 : 110; 
         
+        // --- Shared Constants ---
+        const G2_boss = 98.00;
+        
         // --- Normal Mode Data (Kamikakushi no Shinsou Inspired - Japanese Pentatonic / Lofi Beat) ---
         // A minor / C major pentatonic vibes with distinct bouncy rhythm
         const A2 = 110.00, C3 = 130.81, D3 = 146.83, E3 = 164.81, G3 = 196.00;
@@ -117,7 +120,7 @@ export class SoundManager {
         ];
         
         // --- Boss Mode Data (Intense, Heavy, Driving) ---
-        const D2 = 73.42, F2 = 87.31, C2_boss = 65.41, G2_boss = 98.00;
+        const D2 = 73.42, F2 = 87.31, C2_boss = 65.41;
         const C4_boss = 261.63, F4 = 349.23;
         
         // Driving, continuous 16th chug for boss bassline
