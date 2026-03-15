@@ -96,23 +96,29 @@ export class SoundManager {
         
         if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
         
-        // Normal Mode: 120 BPM. Boss mode: 136 BPM (faster)
-        const stepTime = mode === 'normal' ? 125 : 110; 
+        // Normal Mode: 115 BPM. Boss mode: 136 BPM (faster)
+        const stepTime = mode === 'normal' ? 130 : 110; 
         
-        // --- Normal Mode Data ---
-        const C2 = 65.41, C3 = 130.81, Eb3 = 155.56, G3 = 196.00, Bb3 = 233.08, C4 = 261.63, Eb4 = 311.13;
+        // --- Normal Mode Data (Kamikakushi no Shinsou Inspired - Japanese Pentatonic / Lofi Beat) ---
+        // A minor / C major pentatonic vibes with distinct bouncy rhythm
+        const A2 = 110.00, C3 = 130.81, D3 = 146.83, E3 = 164.81, G3 = 196.00;
+        const A3 = 220.00, C4 = 261.63, D4 = 293.66, E4 = 329.63, G4 = 392.00, A4 = 440.00;
+        
+        // Plucky, wandering bass
         const normalBassPattern = [
-            C2, C2, C3, C2, C2, C2, C3, C2,
-            Eb3, Eb3, C3, Eb3, Bb3, Bb3, G3, Bb3
+            A2, 0, C3, 0, D3, 0, 0, C3,
+            A2, 0, G2_boss, 0, C3, 0, D3, E3
         ];
+        
+        // Eastern pentatonic melody line (bouncy/syncopated)
         const normalArpPattern = [
-            C4, 0, Eb4, 0, C4, G3, C4, Eb4,
-            Bb3, 0, Eb4, 0, Bb3, G3, Bb3, C4
+            A4, E4, 0, G4, A4, 0, C4, D4,
+            E4, 0, D4, C4, A3, 0, G3, A3
         ];
         
         // --- Boss Mode Data (Intense, Heavy, Driving) ---
         const D2 = 73.42, F2 = 87.31, C2_boss = 65.41, G2_boss = 98.00;
-        const D3 = 146.83, A3 = 220.00, C4_boss = 261.63, D4 = 293.66, F4 = 349.23, G4 = 392.00;
+        const C4_boss = 261.63, F4 = 349.23;
         
         // Driving, continuous 16th chug for boss bassline
         const bossBassPattern = [
@@ -131,14 +137,18 @@ export class SoundManager {
             const step = this.bgmIndex % 16;
             
             if (this.bgmMode === 'normal') {
-                // 4 on the floor Kick Drum
-                if (step % 4 === 0) this.playTone(80, 'square', 0.1, 0.15, 0.1); 
-                // Snare Drum
-                if (step === 4 || step === 12) this.playTone(400, 'square', 0.05, 0.1, 0.2);
-                
-                // Bassline & Arp
-                if (normalBassPattern[step] !== 0) this.playTone(normalBassPattern[step], 'square', 0.1, 0.1); 
-                if (normalArpPattern[step] !== 0) this.playTone(normalArpPattern[step], 'sawtooth', 0.15, 0.05); 
+                // Lofi/Trap-ish drum beat
+                // Kick on 1 and offbeat of 2
+                if (step === 0 || step === 6) this.playTone(60, 'square', 0.1, 0.15, 0.1); 
+                // Snare/Clap on 2 and 4
+                if (step === 4 || step === 12) this.playTone(300, 'square', 0.05, 0.1, 0.2);
+                // Hi-hut on every odd step
+                if (step % 2 !== 0) this.playTone(800, 'square', 0.02, 0.05, 0.05);
+
+                // Bassline - sine wave for smooth 808 sub feel
+                if (normalBassPattern[step] !== 0) this.playTone(normalBassPattern[step], 'sine', 0.2, 0.1); 
+                // Melody - plucked square wave for a koto/shamisen type feel
+                if (normalArpPattern[step] !== 0) this.playTone(normalArpPattern[step], 'square', 0.1, 0.05); 
             } else {
                 // BOSS MODE
                 // Aggressive Double Kick drum (every 8th note, plus an extra hit for urgency)
