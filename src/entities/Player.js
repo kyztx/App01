@@ -31,6 +31,7 @@ export class Player {
         this.doubleLaser = false;
         this.doubleLaserTimer = 0;
         this.hasShield = false;
+        this.weaponLevel = 1; // Starts at 1, max 3
     }
 
     update(deltaTime) {
@@ -166,11 +167,44 @@ export class Player {
 
     shoot() {
         this.game.soundManager.playShoot();
+        
+        let damage = 1;
+        let color = '#4df';
+        
+        if (this.weaponLevel === 2) {
+            damage = 2;
+            color = '#f80';
+        } else if (this.weaponLevel >= 3) {
+            damage = 3;
+            color = '#f0f';
+        }
+
         if (this.doubleLaser) {
-            this.game.projectiles.push(new Projectile(this.game, this.x + 5, this.y, -10, '#0f0'));
-            this.game.projectiles.push(new Projectile(this.game, this.x + this.width - 5, this.y, -10, '#0f0'));
+            let p1 = new Projectile(this.game, this.x + 5, this.y, -10, '#0f0');
+            let p2 = new Projectile(this.game, this.x + this.width - 5, this.y, -10, '#0f0');
+            p1.damage = damage; p2.damage = damage;
+            this.game.projectiles.push(p1, p2);
         } else {
-            this.game.projectiles.push(new Projectile(this.game, this.x + this.width / 2, this.y, -10, '#4df'));
+            // Depending on weapon level, we can fire a wider or stronger laser
+            if (this.weaponLevel === 1) {
+                this.game.projectiles.push(new Projectile(this.game, this.x + this.width / 2, this.y, -10, color));
+            } else if (this.weaponLevel === 2) {
+                // Dual spread slightly
+                let p1 = new Projectile(this.game, this.x + 10, this.y, -10, color);
+                let p2 = new Projectile(this.game, this.x + this.width - 10, this.y, -10, color);
+                p1.damage = damage; p2.damage = damage;
+                this.game.projectiles.push(p1, p2);
+            } else if (this.weaponLevel >= 3) {
+                // 3 spread
+                let p1 = new Projectile(this.game, this.x + this.width / 2, this.y, -12, color); // Center fast
+                let p2 = new Projectile(this.game, this.x + 5, this.y, -10, color); // Left
+                let p3 = new Projectile(this.game, this.x + this.width - 5, this.y, -10, color); // Right
+                
+                // Angle slightly for spread effect by setting a tiny speedX to projectiles if we wanted
+                // For now just position spread
+                p1.damage = damage; p2.damage = damage; p3.damage = damage;
+                this.game.projectiles.push(p1, p2, p3);
+            }
         }
     }
     
@@ -196,6 +230,8 @@ export class Player {
             // Clear powerups on hit
             this.rapidFire = false;
             this.doubleLaser = false;
+            // Downgrade weapon level on hit instead of clearing it fully usually feels better, but let's reset it to 1 to be punishing
+            this.weaponLevel = 1;
         }
     }
 }

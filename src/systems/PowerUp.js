@@ -10,14 +10,22 @@ export class PowerUp {
         this.speedY = 1.5;
         this.markedForDeletion = false;
         
-        const types = ['rapid', 'double', 'shield', 'bomb'];
-        this.type = types[Math.floor(Math.random() * types.length)];
+        const types = ['rapid', 'double', 'shield', 'bomb', 'upgrade'];
+        
+        // Weight the upgrade type slightly higher than others since it's the main progression
+        const roll = Math.random();
+        if (roll < 0.3) {
+            this.type = 'upgrade';
+        } else {
+            this.type = types[Math.floor(Math.random() * 4)]; // Pick from first 4
+        }
         
         switch(this.type) {
             case 'rapid': this.color = '#f80'; break;
             case 'double': this.color = '#0f0'; break;
             case 'shield': this.color = '#0ff'; break;
             case 'bomb': this.color = '#f0f'; break;
+            case 'upgrade': this.color = '#ff0'; break; // Yellow for upgrade
         }
     }
 
@@ -77,6 +85,9 @@ export class PowerUp {
                         enemy.hit(20);
                     }
                 });
+                break;
+            case 'upgrade':
+                player.weaponLevel = Math.min(player.weaponLevel + 1, 3); // Max level 3
                 break;
         }
     }

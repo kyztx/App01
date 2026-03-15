@@ -89,8 +89,15 @@ export class Enemy {
             this.game.waveManager.checkBossDefeat(); // Added hook for boss defeat
             // Bosses always drop a powerup
             this.game.powerUps.push(new PowerUp(this.game, this.x + this.width/2, this.y + this.height/2));
-        } else if (Math.random() < 0.05) { // 5% drop chance for normal enemies
-            this.game.powerUps.push(new PowerUp(this.game, this.x + this.width/2, this.y + this.height/2));
+        } else {
+            // Drop chance starts at 80% and decays by 10% per wave down to a minimum of 10%
+            const baseChance = 0.8;
+            const decay = (this.game.wave - 1) * 0.1;
+            const currentChance = Math.max(0.1, baseChance - decay);
+            
+            if (Math.random() < currentChance) {
+                this.game.powerUps.push(new PowerUp(this.game, this.x + this.width/2, this.y + this.height/2));
+            }
         }
     }
 }
