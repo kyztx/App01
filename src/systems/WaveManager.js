@@ -131,7 +131,7 @@ export class WaveManager {
     }
 
     checkBossDefeat() {
-        if (this.bossActive && this.game.enemies.filter(e => e.isBoss).length === 0) {
+        if (this.bossActive && this.game.enemies.filter(e => e.isBoss && !e.markedForDeletion).length === 0) {
             this.bossActive = false;
             this.bossesDefeated++;
             this.game.soundManager.startBGM('normal'); // Revert back to normal BGM
