@@ -311,3 +311,217 @@ export class BossEnemy extends Enemy {
         context.restore();
     }
 }
+
+export class LaserBossEnemy extends Enemy {
+    constructor(game, x, y) {
+        super(game, x, y);
+        this.width = 150;
+        this.height = 100;
+        this.speedY = 0.5;
+        this.speedX = 1.5;
+        this.hp = 120; // Tougher than Tier 1
+        this.scoreValue = 1000;
+        this.color = '#0ff'; // Cyan
+        this.isBoss = true;
+        
+        this.state = 'moving'; // 'moving', 'charging', 'firing'
+        this.stateTimer = 0;
+        
+        this.beamActive = false;
+        this.beamWidth = 60;
+    }
+
+    update(deltaTime) {
+        this.stateTimer += deltaTime;
+
+        if (this.state === 'moving') {
+            if (this.y < 50) this.y += this.speedY;
+            else {
+                this.x += this.speedX;
+                if (this.x < 0 || this.x > this.game.width - this.width) this.speedX *= -1;
+            }
+
+            // Move for 4 seconds, then stop to charge
+            if (this.stateTimer > 4000 && this.y >= 50) {
+                this.state = 'charging';
+                this.stateTimer = 0;
+                // Play windup sound
+                this.game.soundManager.playPowerUp(); 
+            }
+        } 
+        else if (this.state === 'charging') {
+            // Shake effect while charging
+            this.x += (Math.random() - 0.5) * 4;
+            
+            // Charge for 1.5 seconds
+            if (this.stateTimer > 1500) {
+                this.state = 'firing';
+                this.stateTimer = 0;
+                this.beamActive = true;
+                this.game.soundManager.playExplosion(); // booming laser sound
+            }
+        }
+        else if (this.state === 'firing') {
+            // Fire massive beam for 2 seconds
+            if (this.stateTimer > 2000) {
+                this.state = 'moving';
+                this.stateTimer = 0;
+                this.beamActive = false;
+            }
+        }
+        
+        // Handle Beam Hit Detection manually since it's not a projectile
+        if (this.beamActive && !this.game.player.isDead && !this.game.player.isInvulnerable) {
+            const beamX = this.x + this.width/2 - this.beamWidth/2;
+            const px = this.game.player.x;
+            const pw = this.game.player.width;
+            
+            // If player horizontally overlaps the beam
+            if (px + pw > beamX && px < beamX + this.beamWidth) {
+                this.game.player.hit();
+            }
+        }
+    }
+
+    draw(context) {
+        context.save();
+        context.translate(this.x + this.width / 2, this.y + this.height / 2);
+        
+        context.fillStyle = '#222';
+        context.strokeStyle = this.state === 'charging' ? '#fff' : this.color;
+        context.lineWidth = 3;
+        context.shadowBlur = this.state === 'charging' ? 20 : 15;
+        context.shadowColor = context.strokeStyle;
+
+        // Blocky sturdy body
+        context.fillRect(-this.width/2, -this.height/2, this.width, this.height/2);
+        context.strokeRect(-this.width/2, -this.height/2, this.width, this.height/2);
+        
+        // Cannon mouth
+        context.beginPath();
+        context.moveTo(-this.beamWidth/2 - 10, 0);
+        context.lineTo(this.beamWidth/2 + 10, 0);
+        context.lineTo(this.beamWidth/2, this.height/2);
+        context.lineTo(-this.beamWidth/2, this.height/2);
+        context.closePath();
+        context.fill();
+        context.stroke();
+        
+        // Draw the laser beam
+        if (this.beamActive) {
+            context.fillStyle = `rgba(0, 255, 255, ${0.7 + Math.random() * 0.3})`;
+            context.shadowBlur = 30;
+            // Beam shoots down to bottom of screen
+            const depth = this.game.height - this.y;
+            context.fillRect(-this.beamWidth/2, this.height/2, this.beamWidth, depth);
+            
+            // Inner hot core
+            context.fillStyle = '#fff';
+            context.fillRect(-this.beamWidth/4, this.height/2, this.beamWidth/2, depth);
+        }
+        
+        // Health bar
+        const hpPercent = this.hp / 120;
+        context.fillStyle = '#0ff';
+        context.fillRect(-this.width/2, -this.height/2 - 15, this.width * hpPercent, 5);
+        
+        context.restore();
+    }
+}
+
+export class BulletHellBossEnemy extends Enemy {
+    constructor(game, x, y) {
+        super(game, x, y);
+        this.width = 100;
+        this.height = 100;
+        this.speedY = 0.5;
+        this.speedX = 1.0;
+        // HP massively scales depending on wave in WaveManager
+        this.hp = 250; 
+        this.scoreValue = 2500;
+        this.color = '#f0f'; // Magenta
+        this.isBoss = true;
+        
+        this.shootTimer = 0;
+        this.shootInterval = 100; // Extremely fast bursts
+        this.angle = 0;
+        this.spinSpeed = 0.2;
+    }
+
+    update(deltaTime) {
+        if (this.y < 80) this.y += this.speedY;
+        else {
+            this.x += this.speedX;
+            if (this.x < 0 || this.x > this.game.width - this.width) this.speedX *= -1;
+        }
+        
+        this.angle += this.spinSpeed;
+        
+        this.shootTimer += deltaTime;
+        if (this.shootTimer > this.shootInterval && this.y >= 80) {
+            this.shootTimer = 0;
+            // Play a much lighter click sound so it doesn't blow out speakers
+            if (Math.random() > 0.8) this.game.soundManager.playEnemyShoot();
+            
+            // Fire in a rotating star pattern (4 directions at once)
+            for (let i = 0; i < 4; i++) {
+                const fireAngle = this.angle + (i * Math.PI / 2);
+                const pSpeed = 3;
+                const pSpeedX = Math.cos(fireAngle) * pSpeed;
+                const pSpeedY = Math.sin(fireAngle) * pSpeed;
+                
+                let p = new Projectile(this.game, this.x + this.width/2, this.y + this.height/2, pSpeedY, this.color);
+                p.speedX = pSpeedX;
+                this.game.projectiles.push(p);
+            }
+        }
+    }
+
+    draw(context) {
+        context.save();
+        context.translate(this.x + this.width / 2, this.y + this.height / 2);
+        
+        // Spin the boss visually
+        context.rotate(this.angle * 0.5);
+        
+        context.fillStyle = '#222';
+        context.strokeStyle = this.color;
+        context.lineWidth = 4;
+        context.shadowBlur = 20;
+        context.shadowColor = this.color;
+
+        // Octagon shape
+        context.beginPath();
+        const numSides = 8;
+        const radius = this.width / 2;
+        for (let i = 0; i < numSides; i++) {
+            const currentAngle = (i * 2 * Math.PI) / numSides;
+            const px = Math.cos(currentAngle) * radius;
+            const py = Math.sin(currentAngle) * radius;
+            if (i === 0) context.moveTo(px, py);
+            else context.lineTo(px, py);
+        }
+        context.closePath();
+        
+        context.fill();
+        context.stroke();
+        
+        // Inner spinning core
+        context.rotate(-this.angle); // counter spin
+        context.beginPath();
+        context.rect(-radius/3, -radius/3, radius*(2/3), radius*(2/3));
+        context.fillStyle = this.color;
+        context.fill();
+
+        context.restore();
+        
+        // Draw health bar explicitly without rotation
+        context.save();
+        context.translate(this.x + this.width / 2, this.y + this.height / 2);
+        const maxHp = 250 * (1 + (this.game.waveManager.bossesDefeated - 2) * 0.5); // Estimate max HP
+        const hpPercent = Math.min(Math.max(this.hp / maxHp, 0), 1);
+        context.fillStyle = this.color;
+        context.fillRect(-this.width/2, -this.height/2 - 20, this.width * hpPercent, 5);
+        context.restore();
+    }
+}
