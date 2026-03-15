@@ -69,6 +69,60 @@ export class MediumEnemy extends Enemy {
     }
 }
 
+export class HeavyEnemy extends Enemy {
+    constructor(game, x, y) {
+        super(game, x, y);
+        this.width = 50;
+        this.height = 50;
+        this.speedY = 1; // Slow
+        this.speedX = Math.random() > 0.5 ? 0.5 : -0.5; // Slight drift
+        this.hp = 8; // Very tanky
+        this.scoreValue = 80;
+        this.color = '#0ff'; // Cyan
+        
+        this.shootTimer = 0;
+        this.shootInterval = 1500;
+    }
+
+    update(deltaTime) {
+        super.update(deltaTime);
+        
+        // Downward dual shots
+        this.shootTimer += deltaTime;
+        if (this.shootTimer > this.shootInterval && this.y > 0 && this.y < this.game.height - 100) {
+            this.shootTimer = 0;
+            this.game.soundManager.playEnemyShoot();
+            this.game.projectiles.push(new Projectile(this.game, this.x + 10, this.y + this.height, 4, this.color));
+            this.game.projectiles.push(new Projectile(this.game, this.x + this.width - 10, this.y + this.height, 4, this.color));
+        }
+    }
+
+    draw(context) {
+        context.save();
+        context.translate(this.x + this.width / 2, this.y + this.height / 2);
+        
+        context.fillStyle = '#222';
+        context.strokeStyle = this.color;
+        context.lineWidth = 3;
+        context.shadowBlur = 10;
+        context.shadowColor = this.color;
+
+        // Hexagon shape
+        context.beginPath();
+        context.moveTo(0, -this.height/2);
+        context.lineTo(this.width/2, -this.height/4);
+        context.lineTo(this.width/2, this.height/4);
+        context.lineTo(0, this.height/2);
+        context.lineTo(-this.width/2, this.height/4);
+        context.lineTo(-this.width/2, -this.height/4);
+        context.closePath();
+        
+        context.fill();
+        context.stroke();
+        context.restore();
+    }
+}
+
 export class BossEnemy extends Enemy {
     constructor(game, x, y) {
         super(game, x, y);
