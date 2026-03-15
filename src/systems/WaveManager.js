@@ -53,9 +53,10 @@ export class WaveManager {
                 this.game.enemies.push(new SmallEnemy(this.game, x, y));
             }
             
-            // Buff the speeds slightly for all post-boss spawns
+            // Buff the speeds significantly for all post-boss spawns representing a difficulty spike
             const lastEnemy = this.game.enemies[this.game.enemies.length - 1];
-            lastEnemy.speedY += this.bossesDefeated * 0.5;
+            lastEnemy.speedY += this.bossesDefeated * 1.5; // Huge speed baseline boost
+            lastEnemy.speedX *= 1 + (this.bossesDefeated * 0.5); // Increase horizontal speeds if they have them
             
         } else {
             // Pre-Boss: Small & Medium only
@@ -91,15 +92,21 @@ export class WaveManager {
         this.game.wave++;
         this.game.updateUI();
         
-        this.enemiesSpawnedTotal = 0; // Reset for the wave if we want, or keep counting. Let's keep it per wave for simplicity, but wait, the prompt says "every 20th enemy". If we spawn 20 per wave, it's the same. Let's make it so every 20 enemies spawned across all waves triggers a boss.
+        this.enemiesSpawnedTotal = 0; 
         
         this.enemiesSpawned = 0; // Wave enemies spawned
         this.waveTimer = 0;
         this.waveActive = true;
         
-        // Increase difficulty
+        // Base linear progression per wave
         this.enemiesToSpawn += 5;
-        this.spawnInterval = Math.max(500, this.spawnInterval - 100);
+        this.spawnInterval = Math.max(300, this.spawnInterval - 100);
+        
+        // Massive Difficulty Spike multiplier for every boss defeated
+        if (this.bossesDefeated > 0) {
+            this.spawnInterval = Math.max(200, this.spawnInterval - (100 * this.bossesDefeated)); // Spawns happen much faster
+            this.enemiesToSpawn += 10 * this.bossesDefeated; // Waves become much longer
+        }
     }
 
     checkBossDefeat() {
