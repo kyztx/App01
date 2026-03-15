@@ -6,7 +6,8 @@ export class WaveManager {
         this.waveTimer = 0;
         this.spawnInterval = 2000;
         this.enemiesToSpawn = 10;
-        this.enemiesSpawned = 0;
+        this.enemiesSpawned = 0; // For current wave
+        this.totalEnemiesSpawned = 0; // Across all waves
         this.bossActive = false;
         this.waveActive = true;
     }
@@ -42,6 +43,13 @@ export class WaveManager {
         } else {
             this.game.enemies.push(new SmallEnemy(this.game, x, y));
         }
+        
+        this.totalEnemiesSpawned++;
+        
+        // Spawn boss every 20th enemy
+        if (this.totalEnemiesSpawned % 20 === 0) {
+            this.spawnBoss();
+        }
     }
     
     spawnBoss() {
@@ -60,18 +68,15 @@ export class WaveManager {
         this.game.wave++;
         this.game.updateUI();
         
-        this.enemiesSpawned = 0;
+        this.enemiesSpawnedTotal = 0; // Reset for the wave if we want, or keep counting. Let's keep it per wave for simplicity, but wait, the prompt says "every 20th enemy". If we spawn 20 per wave, it's the same. Let's make it so every 20 enemies spawned across all waves triggers a boss.
+        
+        this.enemiesSpawned = 0; // Wave enemies spawned
         this.waveTimer = 0;
         this.waveActive = true;
         
         // Increase difficulty
         this.enemiesToSpawn += 5;
         this.spawnInterval = Math.max(500, this.spawnInterval - 100);
-
-        // Every 5 waves, spawn boss
-        if (this.game.wave % 5 === 0) {
-            this.spawnBoss();
-        }
     }
 
     checkBossDefeat() {

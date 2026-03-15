@@ -4,6 +4,12 @@ export class SoundManager {
         this.masterGain = this.audioCtx.createGain();
         this.masterGain.gain.value = 0.3; // Default volume
         this.masterGain.connect(this.audioCtx.destination);
+        
+        // BGM State
+        this.bgmPlaying = false;
+        this.bgmNotes = [220, 261.63, 329.63, 392.00, 329.63, 261.63]; // A minor pentatonic approx
+        this.bgmIndex = 0;
+        this.bgmIntervalId = null;
     }
 
     playTone(frequency, type, duration, vol = 1, slide = 0) {
@@ -78,5 +84,30 @@ export class SoundManager {
 
     playHit() {
         this.playTone(200, 'sawtooth', 0.1, 0.5, 0.8);
+    }
+    
+    startBGM() {
+        if (this.bgmPlaying) return;
+        this.bgmPlaying = true;
+        if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+        
+        this.bgmIntervalId = setInterval(() => {
+            if (!this.bgmPlaying) return;
+            // Play a quiet bass thud and a note
+            this.playTone(50, 'square', 0.1, 0.1, 0.5); // Bass drum
+            
+            const freq = this.bgmNotes[this.bgmIndex];
+            this.playTone(freq, 'sawtooth', 0.15, 0.05); // Melody note (very quiet to not overpower sfx)
+            
+            this.bgmIndex = (this.bgmIndex + 1) % this.bgmNotes.length;
+        }, 300); // 150 BPM 8th notes
+    }
+    
+    stopBGM() {
+        this.bgmPlaying = false;
+        if (this.bgmIntervalId) {
+            clearInterval(this.bgmIntervalId);
+            this.bgmIntervalId = null;
+        }
     }
 }

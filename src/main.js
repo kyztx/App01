@@ -48,6 +48,9 @@ window.addEventListener('load', () => {
         gameOverScreen.classList.add('hidden');
         
         game = new Game(canvas.width, canvas.height, input);
+        // Browser requires user interaction before AudioContext can resume
+        game.soundManager.startBGM();
+        
         lastTime = performance.now();
         requestAnimationFrame(animate);
     }
