@@ -91,16 +91,59 @@ export class SoundManager {
         this.bgmPlaying = true;
         if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
         
+        // Let's create a synthwave-style 16-step sequencer (4/4 time, 16th notes)
+        // Tempo: 120 BPM -> 1 beat = 500ms -> 16th note = 125ms
+        const stepTime = 125; 
+        
+        // Frequencies for a driving Cm progression: C3, Eb3, G3, Bb3, C4
+        const C2 = 65.41;
+        const C3 = 130.81;
+        const Eb3 = 155.56;
+        const G3 = 196.00;
+        const Bb3 = 233.08;
+        const C4 = 261.63;
+        const Eb4 = 311.13;
+        
+        // Bassline pattern (16 steps), driving bass
+        const bassPattern = [
+            C2, C2, C3, C2, C2, C2, C3, C2,
+            Eb3, Eb3, C3, Eb3, Bb3, Bb3, G3, Bb3
+        ];
+        
+        // Arpeggiator pattern (16 steps), 0 means rest
+        const arpPattern = [
+            C4, 0, Eb4, 0, C4, G3, C4, Eb4,
+            Bb3, 0, Eb4, 0, Bb3, G3, Bb3, C4
+        ];
+        
         this.bgmIntervalId = setInterval(() => {
             if (!this.bgmPlaying) return;
-            // Play a quiet bass thud and a note
-            this.playTone(50, 'square', 0.1, 0.1, 0.5); // Bass drum
             
-            const freq = this.bgmNotes[this.bgmIndex];
-            this.playTone(freq, 'sawtooth', 0.15, 0.05); // Melody note (very quiet to not overpower sfx)
+            const step = this.bgmIndex % 16;
             
-            this.bgmIndex = (this.bgmIndex + 1) % this.bgmNotes.length;
-        }, 300); // 150 BPM 8th notes
+            // 4 on the floor Kick Drum (every 4th step = quarter notes)
+            if (step % 4 === 0) {
+                this.playTone(80, 'square', 0.1, 0.15, 0.1); 
+            }
+            
+            // Snare Drum (Hit on 2 and 4 = steps 4 and 12)
+            if (step === 4 || step === 12) {
+                // Short noise burst effect for snare using high freq square
+                this.playTone(400, 'square', 0.05, 0.1, 0.2);
+            }
+            
+            // Bassline
+            const bassNote = bassPattern[step];
+            this.playTone(bassNote, 'square', 0.1, 0.1); // Short punchy bass
+            
+            // Arpeggio / Melody
+            const arpNote = arpPattern[step];
+            if (arpNote !== 0) {
+                this.playTone(arpNote, 'sawtooth', 0.15, 0.05); 
+            }
+            
+            this.bgmIndex++;
+        }, stepTime);
     }
     
     stopBGM() {
