@@ -123,6 +123,122 @@ export class HeavyEnemy extends Enemy {
     }
 }
 
+export class KamikazeEnemy extends Enemy {
+    constructor(game, x, y) {
+        super(game, x, y);
+        this.width = 20;
+        this.height = 20;
+        this.speedY = 4 + Math.random() * 2; // Very fast
+        this.hp = 1;
+        this.scoreValue = 20;
+        this.color = '#f80'; // Orange
+        
+        // Target acquiring phase
+        this.tracking = true;
+    }
+
+    update(deltaTime) {
+        if (this.tracking) {
+            // Track player's X position until half-way down screen
+            if (this.game.player && this.y < this.game.height / 2) {
+                const dx = this.game.player.x - this.x;
+                if (Math.abs(dx) > 5) {
+                    this.x += dx * 0.05; // Smooth tracking
+                }
+            } else {
+                this.tracking = false; // Lock in and dive
+                this.speedY += 2; // Dive faster
+            }
+        }
+        
+        super.update(deltaTime);
+    }
+
+    draw(context) {
+        context.save();
+        context.translate(this.x + this.width / 2, this.y + this.height / 2);
+        
+        context.fillStyle = '#222';
+        context.strokeStyle = this.color;
+        context.lineWidth = 2;
+        context.shadowBlur = 8;
+        context.shadowColor = this.color;
+
+        // Arrow shape
+        context.beginPath();
+        context.moveTo(0, this.height/2 + 5);
+        context.lineTo(this.width/2, -this.height/2);
+        context.lineTo(0, -this.height/4);
+        context.lineTo(-this.width/2, -this.height/2);
+        context.closePath();
+        
+        context.fill();
+        context.stroke();
+        context.restore();
+    }
+}
+
+export class SpreadEnemy extends Enemy {
+    constructor(game, x, y) {
+        super(game, x, y);
+        this.width = 45;
+        this.height = 35;
+        this.speedY = 1.2;
+        this.speedX = Math.random() > 0.5 ? 1.5 : -1.5;
+        this.hp = 5;
+        this.scoreValue = 50;
+        this.color = '#0f0'; // Green
+        
+        this.shootTimer = 0;
+        this.shootInterval = 2500;
+    }
+
+    update(deltaTime) {
+        super.update(deltaTime);
+        
+        this.shootTimer += deltaTime;
+        if (this.shootTimer > this.shootInterval && this.y > 0 && this.y < this.game.height - 100) {
+            this.shootTimer = 0;
+            this.game.soundManager.playEnemyShoot();
+            
+            // 3-way spread
+            const pSpeed = 4;
+            let centerP = new Projectile(this.game, this.x + this.width/2, this.y + this.height, pSpeed, this.color);
+            let leftP = new Projectile(this.game, this.x + 10, this.y + this.height, pSpeed, this.color);
+            leftP.speedX = -1.5;
+            let rightP = new Projectile(this.game, this.x + this.width - 10, this.y + this.height, pSpeed, this.color);
+            rightP.speedX = 1.5;
+            
+            this.game.projectiles.push(centerP, leftP, rightP);
+        }
+    }
+
+    draw(context) {
+        context.save();
+        context.translate(this.x + this.width / 2, this.y + this.height / 2);
+        
+        context.fillStyle = '#222';
+        context.strokeStyle = this.color;
+        context.lineWidth = 2;
+        context.shadowBlur = 10;
+        context.shadowColor = this.color;
+
+        // W shape ship
+        context.beginPath();
+        context.moveTo(-this.width/2, -this.height/2);
+        context.lineTo(-this.width/4, this.height/2);
+        context.lineTo(0, 0);
+        context.lineTo(this.width/4, this.height/2);
+        context.lineTo(this.width/2, -this.height/2);
+        context.lineTo(0, this.height/4);
+        context.closePath();
+        
+        context.fill();
+        context.stroke();
+        context.restore();
+    }
+}
+
 export class BossEnemy extends Enemy {
     constructor(game, x, y) {
         super(game, x, y);
