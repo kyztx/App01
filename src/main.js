@@ -1,9 +1,8 @@
 import { Game } from './Game.js';
 import { Input } from './Input.js';
 
-window.addEventListener('load', () => {
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
     
     // Set internal canvas resolution to match our 800x600 CSS size
     // For crisp pixel art, keeping a fixed internal resolution is best.
@@ -63,4 +62,3 @@ window.addEventListener('load', () => {
     // Event Listeners
     startButton.addEventListener('click', startGame);
     restartButton.addEventListener('click', startGame);
-});
