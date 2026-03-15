@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Retro Space Shooter</title>
+    <link rel="stylesheet" href="./style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Main game container -->
+    <div id="game-container">
+      <canvas id="gameCanvas"></canvas>
+      
+      <!-- UI Layer Overlay -->
+      <div id="ui-layer">
+        <div class="hud">
+          <div id="scoreDisplay">SCORE: <span id="score">0</span></div>
+          <div id="waveDisplay">WAVE: <span id="wave">1</span></div>
+          <div id="livesDisplay">LIVES: <span id="lives">3</span></div>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="hidden overlay-screen">
+          <h1>GAME OVER</h1>
+          <p>FINAL SCORE: <span id="finalScore">0</span></p>
+          <button id="restartButton">RESTART</button>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="overlay-screen">
+          <h1>SPACE SHOOTER</h1>
+          <p>WASD/Arrows to Move | SPACE to Shoot</p>
+          <button id="startButton">START GAME</button>
+        </div>
+      </div>
+    </div>
+    
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
